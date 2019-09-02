@@ -21,6 +21,7 @@ var _ v2.AuthorizationServer = &server{}
 // New creates a new authorization server.
 func New() v2.AuthorizationServer {
 	_, fail := os.LookupEnv("FAIL")
+	log.Printf("FAIL: %v", fail)
 	return &server{fail: fail}
 }
 
