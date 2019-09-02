@@ -3,14 +3,16 @@ package auth
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	v2 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
-	"github.com/gogo/googleapis/google/rpc"
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/gogo/protobuf/jsonpb"
+	google_rpc "istio.io/gogo-genproto/googleapis/google/rpc"
 )
 
 type server struct {
+	fail      bool
 	marshaler jsonpb.Marshaler
 }
 
@@ -18,7 +20,8 @@ var _ v2.AuthorizationServer = &server{}
 
 // New creates a new authorization server.
 func New() v2.AuthorizationServer {
-	return &server{}
+	_, fail := os.LookupEnv("FAIL")
+	return &server{fail: fail}
 }
 
 func (s *server) Check(ctx context.Context, req *v2.CheckRequest) (*v2.CheckResponse, error) {
@@ -27,11 +30,14 @@ func (s *server) Check(ctx context.Context, req *v2.CheckRequest) (*v2.CheckResp
 	log.Println(str)
 
 	time.Sleep(300 * time.Millisecond)
+	code := int32(google_rpc.OK)
+	if s.fail {
+		code = int32(google_rpc.UNAUTHENTICATED)
+	}
 
 	return &v2.CheckResponse{
-		Status: &rpc.Status{
-			Code:    int32(rpc.OK),
-			Message: "",
+		Status: &google_rpc.Status{
+			Code: code,
 		},
 	}, nil
 }
