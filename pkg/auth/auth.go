@@ -6,8 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	v2 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/gogo/protobuf/types"
 	google_rpc "istio.io/gogo-genproto/googleapis/google/rpc"
 )
 
@@ -37,6 +39,16 @@ func (s *server) Check(ctx context.Context, req *v2.CheckRequest) (*v2.CheckResp
 	}
 
 	return &v2.CheckResponse{
+		HttpResponse: &v2.CheckResponse_OkResponse{
+			OkResponse: &v2.OkHttpResponse{
+				Headers: []*core.HeaderValueOption{
+					{
+						Append: &types.BoolValue{Value: false},
+						Header: &core.HeaderValue{Key: "authorization", Value: "Bearer ok"},
+					},
+				},
+			},
+		},
 		Status: &google_rpc.Status{
 			Code: code,
 		},
